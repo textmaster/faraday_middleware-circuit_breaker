@@ -7,11 +7,11 @@ Gem::Specification.new do |spec|
   spec.name          = "faraday_middleware-circuit_breaker"
   spec.version       = FaradayMiddleware::CircuitBreaker::VERSION
   spec.authors       = ["Pierre-Louis Gottfrois"]
-  spec.email         = ["pierrelouis.gottfrois@gmail.com"]
+  spec.email         = ["pierre-louis@textmaster.com"]
 
   spec.summary       = %q{Middleware to apply circuit breaker pattern.}
   spec.description   = %q{A Faraday Middleware to handle spotty web services.}
-  spec.homepage      = "http://textmaster.com"
+  spec.homepage      = "https://github.com/textmaster/faraday_middleware-circuit_breaker"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
