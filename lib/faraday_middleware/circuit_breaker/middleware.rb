@@ -19,7 +19,7 @@ module FaradayMiddleware
         Stoplight(env.url.to_s) do
           @app.call(env)
         end
-        .with_timeout(option_set.timeout)
+        .with_cool_off_time(option_set.timeout)
         .with_threshold(option_set.threshold)
         .with_fallback { |e| option_set.fallback.call(env, e) }
         .run
@@ -36,6 +36,8 @@ module FaradayMiddleware
             Stoplight::Light.default_notifiers += [Stoplight::Notifier::Logger.new(value)]
           when :honeybadger
             Stoplight::Light.default_notifiers += [Stoplight::Notifier::Honeybadger.new(value)]
+          when :raven
+            Stoplight::Light.default_notifiers += [Stoplight::Notifier::Raven.new(value)]
           when :hip_chat
             Stoplight::Light.default_notifiers += [Stoplight::Notifier::HipChat.new(value[:client], value[:room])]
           when :slack
