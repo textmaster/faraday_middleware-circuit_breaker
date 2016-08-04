@@ -19,7 +19,7 @@ module FaradayMiddleware
         Stoplight(env.url.to_s) do
           @app.call(env)
         end
-        .with_timeout(option_set.timeout)
+        .with_cool_off_time(option_set.timeout)
         .with_threshold(option_set.threshold)
         .with_fallback { |e| option_set.fallback.call(env, e) }
         .run
