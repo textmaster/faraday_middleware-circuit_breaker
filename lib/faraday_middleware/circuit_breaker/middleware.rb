@@ -36,6 +36,8 @@ module FaradayMiddleware
             Stoplight::Light.default_notifiers += [Stoplight::Notifier::Logger.new(value)]
           when :honeybadger
             Stoplight::Light.default_notifiers += [Stoplight::Notifier::Honeybadger.new(value)]
+          when :raven
+            Stoplight::Light.default_notifiers += [Stoplight::Notifier::Raven.new(value)]
           when :hip_chat
             Stoplight::Light.default_notifiers += [Stoplight::Notifier::HipChat.new(value[:client], value[:room])]
           when :slack
