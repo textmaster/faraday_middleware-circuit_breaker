@@ -12,6 +12,7 @@ module FaradayMiddleware
 
         @option_set = OptionSet.new(options)
 
+        setup_data_store
         setup_notifiers
       end
 
@@ -29,6 +30,10 @@ module FaradayMiddleware
 
       attr_reader :option_set
 
+      def setup_data_store
+        Stoplight::Light.default_data_store = option_set.data_store.call
+      end
+
       def setup_notifiers
         option_set.notifiers.each do |notifier, value|
           case notifier.to_sym
@@ -36,7 +41,7 @@ module FaradayMiddleware
             Stoplight::Light.default_notifiers += [Stoplight::Notifier::Logger.new(value)]
           when :honeybadger
             Stoplight::Light.default_notifiers += [Stoplight::Notifier::Honeybadger.new(value)]
-          when :raven
+          when :raven, :sentry
             Stoplight::Light.default_notifiers += [Stoplight::Notifier::Raven.new(value)]
           when :hip_chat
             Stoplight::Light.default_notifiers += [Stoplight::Notifier::HipChat.new(value[:client], value[:room])]
