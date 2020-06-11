@@ -24,6 +24,7 @@ module FaradayMiddleware
         .with_cool_off_time(option_set.timeout)
         .with_threshold(option_set.threshold)
         .with_fallback { |e| option_set.fallback.call(env, e) }
+        .with_error_handler { |err, handler| option_set.error_handler.call(err, handler) }
         .run
       end
 
