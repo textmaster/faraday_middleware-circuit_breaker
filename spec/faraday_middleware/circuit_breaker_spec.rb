@@ -1,5 +1,9 @@
 describe FaradayMiddleware::CircuitBreaker do
 
+  before do
+    Stoplight::Light.default_data_store = Stoplight::DataStore::Memory.new
+  end
+
   def connection(options = {})
     Faraday.new do |c|
       c.use :circuit_breaker, options
@@ -9,6 +13,12 @@ describe FaradayMiddleware::CircuitBreaker do
         end
         stub.get('/failure') do
           [500, {}, '']
+        end
+        stub.get('/query?key=error') do
+          raise StandardError
+        end
+        stub.get('/query?key=success') do
+          [200, {}, '']
         end
       end
     end
@@ -26,6 +36,22 @@ describe FaradayMiddleware::CircuitBreaker do
     it 'calls fallback' do
       expect(fallback).to receive(:foo).and_return(response)
       expect(connection(fallback: fallback.method(:foo)).get('/blank').status).to eq(503)
+    end
+
+  end
+
+  describe 'on failure with different query string' do
+
+    let(:threshold) { 3 }
+
+    before do
+      Stoplight::Light.default_notifiers = []
+    end
+
+    it 'should still tripped' do
+      conn = connection(threshold: threshold)
+      threshold.times { conn.get('/query?key=error') }
+      expect(conn.get('/query?key=success').status).to eq(503)
     end
 
   end

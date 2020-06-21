@@ -17,7 +17,8 @@ module FaradayMiddleware
       end
 
       def call(env)
-        Stoplight(env.url.to_s) do
+        base_url = URI.join(env.url, '/')
+        Stoplight(base_url.to_s) do
           @app.call(env)
         end
         .with_cool_off_time(option_set.timeout)
