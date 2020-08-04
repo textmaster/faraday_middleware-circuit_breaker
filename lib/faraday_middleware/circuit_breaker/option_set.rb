@@ -6,9 +6,9 @@ module FaradayMiddleware
   module CircuitBreaker
     class OptionSet
 
-      VALID_OPTIONS = %w(timeout threshold fallback notifiers data_store)
+      VALID_OPTIONS = %w(timeout threshold fallback notifiers data_store, error_handler)
 
-      attr_accessor :timeout, :threshold, :fallback, :notifiers, :data_store
+      attr_accessor :timeout, :threshold, :fallback, :notifiers, :data_store, :error_handler
 
       def initialize(options = {})
         @timeout    = options[:timeout] || 60.0
@@ -16,6 +16,7 @@ module FaradayMiddleware
         @fallback   = options[:fallback] || proc { Faraday::Response.new(status: 503, response_headers: {}) }
         @notifiers  = options[:notifiers] || {}
         @data_store = options[:data_store] || proc { Stoplight::Light.default_data_store }
+        @error_handler = options[:error_handler] || Stoplight::Default::ERROR_HANDLER
       end
 
       def self.validate!(options)

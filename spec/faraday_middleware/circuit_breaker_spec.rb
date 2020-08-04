@@ -20,6 +20,12 @@ describe FaradayMiddleware::CircuitBreaker do
         stub.get('/query?key=success') do
           [200, {}, '']
         end
+        stub.get('/argument_error') do
+          raise ArgumentError
+        end
+        stub.get('/other_error') do
+          raise EncodingError
+        end
       end
     end
   end
@@ -27,10 +33,21 @@ describe FaradayMiddleware::CircuitBreaker do
   it { expect(connection.get('/success').status).to eq(200) }
   it { expect(connection.get('/failure').status).to eq(500) }
   it { expect(connection.get('/blank').status).to eq(503) }
+  it { expect { connection.get('/argument_error') }.not_to raise_error}
+  it { expect(connection.get('/argument_error').status).to eq(503)}
+  it { expect { connection.get('/other_error') }.not_to raise_error}
+  it { expect(connection.get('/other_error').status).to eq(503)}
 
   describe 'on failure' do
 
     let(:fallback) { double }
+    let(:argument_error_handler) do
+      ->(exception, handler) do
+        raise exception if exception.is_a?(ArgumentError)
+        handler.call(exception)
+      end
+    end
+
     let(:response) { Faraday::Response.new(status: 503, response_headers: {}) }
 
     it 'calls fallback' do
@@ -38,6 +55,13 @@ describe FaradayMiddleware::CircuitBreaker do
       expect(connection(fallback: fallback.method(:foo)).get('/blank').status).to eq(503)
     end
 
+    it 'calls error handler' do
+      conn_with_err_handler = connection(error_handler: argument_error_handler)
+      expect { conn_with_err_handler.get('/argument_error') }.to raise_error(ArgumentError)
+      expect { conn_with_err_handler.get('/other_error') }.not_to raise_error
+      expect { conn_with_err_handler.get('/failure') }.not_to raise_error
+      expect { conn_with_err_handler.get('/success') }.not_to raise_error
+    end
   end
 
   describe 'on failure with different query string' do

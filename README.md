@@ -57,7 +57,7 @@ The default is `3` times.
 
 ### Custom fallback
 
-On a failure, middlware will render an empty `503` http response by default. You can customize the fallback response:
+On a failure, middleware will render an empty `503` http response by default. You can customize the fallback response:
 
 ```ruby
 Faraday.new(url: 'http://foo.com') do |c|
@@ -87,6 +87,40 @@ Whatever you chose, your method should return a valid faraday response. For exam
 ```ruby
 proc { Faraday::Response.new(status: 503, response_headers: {}) }
 ```
+
+### Custom error handling
+
+In some situations, it might required to allow for particular error types to be exempt from tripping the circuit breaker
+(like regular 403 or 401 HTTP responses, which aren't really out-of-the-ordinary conditions that should trip the circuit breaker).
+The underlying stoplight gem supports [custom error handling](https://github.com/orgsync/stoplight#custom-errors),
+The `error_handler` option allows you to add your own customer error handler behavior: 
+
+```ruby
+Faraday.new(url: 'http://foo.com') do |c|
+  c.use :circuit_breaker, error_handler: ->(exception, handler) { # do something }
+end
+```
+
+Middleware will try to call the `call` method on `error_handler` passing 2 arguments:
+
+- `exception` -- the exception raised that triggered the circuit breaker
+- `handler` -- the current error handler `Proc` that would be in charge of handling the `exception` if no `error_handler` option was passed 
+
+You can pass a method to be eager called like this (with a handler that exempts `ArgumentError` from tripping the circuit):
+
+```ruby
+Faraday.new(url: 'http://foo.com') do |c|
+  c.use :circuit_breaker, error_handler: method(:foo)
+end
+
+def foo(exception, handler)
+  raise exception if exception.is_a?(ArgumentError)
+  handler.call(exception)
+end
+```
+
+NOTE: It is most always a good idea to call the original `handler` with the exception that was passed in at the end of your
+handler. (By default, the `error_handler` will just be [`Stoplight::Default::ERROR_HANDLER`](https://github.com/orgsync/stoplight/blob/master/lib/stoplight/default.rb#L9))
 
 ### Notifiers
 
