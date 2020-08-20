@@ -6,7 +6,7 @@ module FaradayMiddleware
   module CircuitBreaker
     class OptionSet
 
-      VALID_OPTIONS = %w(timeout threshold fallback notifiers data_store, error_handler)
+      VALID_OPTIONS = %w(timeout threshold fallback notifiers data_store error_handler)
 
       attr_accessor :timeout, :threshold, :fallback, :notifiers, :data_store, :error_handler
 
