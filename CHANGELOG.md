@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1]
+### Fixed
+
+- Fixed `ArgumentError: Unknown option: data_store. Valid options are :timeout, threshold, fallback, notifiers, data_store,, error_handler`
+  due to an extra comma introduced in the valid option list.
+
 ## [0.4.0]
 ### Added
 
