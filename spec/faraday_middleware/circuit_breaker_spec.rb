@@ -77,7 +77,36 @@ describe FaradayMiddleware::CircuitBreaker do
       threshold.times { conn.get('/query?key=error') }
       expect(conn.get('/query?key=success').status).to eq(503)
     end
-
   end
 
+  describe 'using response_handler for adding custom failure criteria' do
+    let(:light) { double }
+    let(:http_code) { 500 }
+    let(:http_client) do
+      connection(
+        response_handler: ->(response){
+          code = response.status
+          raise StandardError.new("Got response #{code}") if code == http_code
+          response
+        },
+        fallback: ->(_, exception){
+          Faraday::Response.new(status: http_code, response_headers: {})
+        }
+      )
+    end
+
+    before { allow(light).to receive(:name).and_return('http:/') }
+
+    def failures
+      Stoplight::Light.default_data_store.get_failures(light)
+    end
+
+    it 'will increase spotlight failure based on response_handler logic' do
+      expect(http_client.get('/success').status).to eq(200)
+      expect(failures.length).to eq(0)
+
+      expect(http_client.get('/failure').status).to eq(http_code)
+      expect(failures.length).to eq(1)
+    end
+  end
 end
