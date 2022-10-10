@@ -196,6 +196,22 @@ end
 
 You'll need to have [Bugsnag](https://rubygems.org/gems/bugsnag) gem installed.
 
+#### Sentry
+
+To send notifications to sentry:
+
+```ruby
+require 'sentry-raven'
+
+sentry_raven = Raven::Configuration.new
+
+Faraday.new(url: 'http://foo.com') do |c|
+  c.use :circuit_breaker, notifiers: { sentry: sentry_raven } # or { raven: sentry_raven }
+end
+```
+
+You'll need to have [Sentry](https://rubygems.org/gems/sentry-raven) gem installed.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
@@ -210,4 +226,3 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/[USERN
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
-
