@@ -19,7 +19,7 @@ module FaradayMiddleware
       def call(env)
         base_url = URI.join(env.url, '/')
         Stoplight(base_url.to_s) do
-          @app.call(env)
+          option_set.response_handler.call(@app.call(env))
         end
         .with_cool_off_time(option_set.timeout)
         .with_threshold(option_set.threshold)
