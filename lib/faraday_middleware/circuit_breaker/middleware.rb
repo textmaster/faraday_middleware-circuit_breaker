@@ -17,7 +17,7 @@ module FaradayMiddleware
       end
 
       def call(env)
-        base_url = URI.join(env.url, '/')
+        base_url = option_set.cache_key_generator.call(env.url)
         Stoplight(base_url.to_s) do
           @app.call(env)
         end
