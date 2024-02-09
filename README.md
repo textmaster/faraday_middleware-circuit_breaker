@@ -93,7 +93,7 @@ proc { Faraday::Response.new(status: 503, response_headers: {}) }
 In some situations, it might required to allow for particular error types to be exempt from tripping the circuit breaker
 (like regular 403 or 401 HTTP responses, which aren't really out-of-the-ordinary conditions that should trip the circuit breaker).
 The underlying stoplight gem supports [custom error handling](https://github.com/orgsync/stoplight#custom-errors),
-The `error_handler` option allows you to add your own customer error handler behavior: 
+The `error_handler` option allows you to add your own customer error handler behavior:
 
 ```ruby
 Faraday.new(url: 'http://foo.com') do |c|
@@ -104,7 +104,7 @@ end
 Middleware will try to call the `call` method on `error_handler` passing 2 arguments:
 
 - `exception` -- the exception raised that triggered the circuit breaker
-- `handler` -- the current error handler `Proc` that would be in charge of handling the `exception` if no `error_handler` option was passed 
+- `handler` -- the current error handler `Proc` that would be in charge of handling the `exception` if no `error_handler` option was passed
 
 You can pass a method to be eager called like this (with a handler that exempts `ArgumentError` from tripping the circuit):
 
@@ -121,6 +121,52 @@ end
 
 NOTE: It is most always a good idea to call the original `handler` with the exception that was passed in at the end of your
 handler. (By default, the `error_handler` will just be [`Stoplight::Default::ERROR_HANDLER`](https://github.com/orgsync/stoplight/blob/master/lib/stoplight/default.rb#L9))
+
+### Custom Stoplight key
+
+By default, the circuit breaker will count failures by domain, but this logic can be tweak by passing a lambda to the `cache_key_generator` option.
+The lambda will receive the [URI](https://docs.ruby-lang.org/en/2.1.0/URI.html) that Faraday is trying to call, and whatever string it returns will be used as the key to count the errors,
+and all URI with the same key will trip together.
+
+The default behaviour is:
+
+```ruby
+Faraday.new(url: 'http://foo.com/bar') do |c|
+  c.use :circuit_breaker, cache_key_generator: ->(url) { URI.join(url, '/').to_s }
+end
+```
+
+But for instance if when `http://foo.com/bar?id=1` trips you also want `http://foo.com/bar?id=2` to be tripped but `http://foo.com/foo` to go through, then you could pass the following:
+
+```ruby
+Faraday.new(url: 'http://foo.com/bar') do |c|
+  c.use :circuit_breaker, cache_key_generator: lambda do |url|
+        base_url = url.clone
+        base_url.fragment = base_url.query = nil
+        base_url.to_s
+      end
+end
+```
+
+Because the key is a simple string, it doesn't have to be constructed from the URI directly, so the following is also valid:
+
+```ruby
+Faraday.new(url: 'http://foo.com/bar') do |c|
+  c.use :circuit_breaker, cache_key_generator: lambda do |url|
+        if url.hostname == 'api.mydomain.com'
+          if url.path.start_with? "/users"
+            return "user_service"
+          elsif url.path.start_with? "/orders"
+            return "orders_service"
+          else
+            return "other_service"
+          end
+        end
+
+        URI.join(url, '/').to_s
+      end
+end
+```
 
 ### Notifiers
 

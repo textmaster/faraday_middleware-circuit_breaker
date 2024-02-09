@@ -17,7 +17,7 @@ module FaradayMiddleware
         @notifiers  = options[:notifiers] || {}
         @data_store = options[:data_store] || proc { Stoplight::Light.default_data_store }
         @error_handler = options[:error_handler] || Stoplight::Default::ERROR_HANDLER
-        @cache_key_generator = options[:cache_key_generator] || ->(url) { URI.join(url, '/') }
+        @cache_key_generator = options[:cache_key_generator] || ->(url) { URI.join(url, '/').to_s }
       end
 
       def self.validate!(options)

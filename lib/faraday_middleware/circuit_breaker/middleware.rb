@@ -18,7 +18,7 @@ module FaradayMiddleware
 
       def call(env)
         base_url = option_set.cache_key_generator.call(env.url)
-        Stoplight(base_url.to_s) do
+        Stoplight(base_url) do
           @app.call(env)
         end
         .with_cool_off_time(option_set.timeout)

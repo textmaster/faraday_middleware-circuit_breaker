@@ -86,7 +86,7 @@ describe FaradayMiddleware::CircuitBreaker do
       lambda do |url|
         base_url = url.clone
         base_url.fragment = base_url.query = nil
-        base_url
+        base_url.to_s
       end
     end
 
