@@ -80,4 +80,22 @@ describe FaradayMiddleware::CircuitBreaker do
 
   end
 
+  describe 'with a different cache key generator' do
+    let(:threshold) { 3 }
+    let(:cache_key_generator) do
+      lambda do |url|
+        base_url = url.clone
+        base_url.fragment = base_url.query = nil
+        base_url.to_s
+      end
+    end
+
+    it 'should not trip when the new key differs' do
+      conn = connection(threshold: threshold, cache_key_generator: cache_key_generator)
+      threshold.times { conn.get('/query?key=error') }
+      expect(conn.get('/query?key=success').status).to eq(503)
+      expect(conn.get('/success').status).to eq(200)
+    end
+  end
+
 end
